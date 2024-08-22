@@ -4,6 +4,7 @@ import { ViteEjsPlugin } from 'vite-plugin-ejs';
 import { generateInputEntries, gatherMockData, ViteEjsHotModuleReloadPlugin } from './config/vite';
 
 export default defineConfig({
+  base: '/yugra-threejs-scene/',
   server: {
     host: true,
     open: true,
