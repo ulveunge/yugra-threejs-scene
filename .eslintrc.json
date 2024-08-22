@@ -1,0 +1,50 @@
+{
+  "parser": "@typescript-eslint/parser",
+  "parserOptions": {
+    "ecmaVersion": 11,
+    "sourceType": "module",
+    "project": "./tsconfig.json"
+  },
+  "extends": [
+    "plugin:import/recommended",
+    "plugin:@typescript-eslint/recommended",
+    "plugin:@typescript-eslint/recommended-requiring-type-checking",
+    "plugin:tailwindcss/recommended",
+    "plugin:prettier/recommended"
+  ],
+  "rules": {
+    "import/no-extraneous-dependencies": 0,
+    "import/no-dynamic-require": 0,
+    "import/prefer-default-export": 0,
+    "no-param-reassign": [2, { "props": false }],
+    "no-console": 0,
+    "no-nested-ternary": 0,
+    "no-plusplus": 0,
+    "no-shadow": "off",
+    "@typescript-eslint/no-shadow": "error",
+    "class-methods-use-this": 0,
+    "default-case": 0,
+    "@typescript-eslint/ban-ts-comment": 0,
+    "@typescript-eslint/no-misused-promises": 0,
+    "import/extensions": [1, "never"],
+    "tailwindcss/classnames-order": "warn",
+    "tailwindcss/no-custom-classname": "warn",
+    "tailwindcss/no-contradicting-classname": "error",
+    "prettier/prettier": [
+      "warn",
+      {
+        "doubleQuote": false,
+        "singleQuote": true,
+        "bracketSpacing": true,
+        "endOfLine": "lf",
+        "printWidth": 120,
+        "semi": true,
+        "tabWidth": 2,
+        "trailingComma": "all",
+        "plugins": ["prettier-plugin-tailwindcss"],
+        "tailwindAttributes": ["myClassList"],
+        "tailwindFunctions": ["clsx"]
+      }
+    ]
+  }
+}
