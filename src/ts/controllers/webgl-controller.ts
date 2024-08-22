@@ -9,6 +9,7 @@ import { Line2 } from 'three/examples/jsm/lines/Line2.js';
 import Stats from 'three/examples/jsm/libs/stats.module.js';
 import HeightMap from '/assets/heightmap.png';
 import Star from '/assets/star.png';
+import metalTexture from '/assets/metal.jpg';
 
 export default class extends Controller {
   static targets = ['container', 'veil'];
@@ -36,8 +37,8 @@ export default class extends Controller {
 
     // plane params
     meshEmissive: 0xffffff,
-    lineWidth: 0.04,
-    lineColor: 0x999999,
+    lineWidth: 0.01,
+    lineColor: 0x1a1a1a,
   };
 
   terrainWidth = 30;
@@ -307,7 +308,7 @@ export default class extends Controller {
   }
 
   createPrimitives() {
-    const texture = this.textureLoader.load('/assets/metal.jpg');
+    const texture = this.textureLoader.load(metalTexture);
     const material = new THREE.MeshBasicMaterial({ map: texture });
 
     const sphere = new THREE.Mesh(new THREE.SphereGeometry(0.5, 32, 32), material);
