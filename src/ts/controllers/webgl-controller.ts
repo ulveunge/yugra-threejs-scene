@@ -27,31 +27,25 @@ export default class extends Controller {
 
   primitives: THREE.Mesh<any>[] = [];
   activeModelIndex: number = 0;
+  isAnimationFinished: boolean = true;
 
   gui!: dat.GUI;
   stats!: Stats;
 
   params = {
     // general scene params
-    speed: 2.5,
+    speed: 1,
 
     // plane params
     meshEmissive: 0xffffff,
-    lineWidth: 0.01,
-    lineColor: 0x1a1a1a,
+    lineWidth: 0.04,
+    // lineColor: 0x1a1a1a,
+    lineColor: 0x999999,
   };
 
   terrainWidth = 30;
   terrainHeight = 30;
 
-  lightIntensity1 = 0.85;
-  lightPos2 = {
-    x: -15,
-    y: 1,
-    z: 5,
-  };
-
-  lightIntensity2 = 0.85;
   numOfMeshSets = 6;
 
   initialize() {
@@ -62,6 +56,7 @@ export default class extends Controller {
       this.textureLoader = new THREE.TextureLoader();
       this.controls = this.createOrbitControls();
       window.addEventListener('resize', this.resize);
+      this.containerTarget.addEventListener('wheel', this.wheelHandler);
       this.run();
     }
   }
@@ -208,7 +203,6 @@ export default class extends Controller {
     }
 
     this.createPrimitives();
-    this.animateModels();
     this.addBackground();
     this.createGuiControls();
     this.createStats();
@@ -312,47 +306,86 @@ export default class extends Controller {
     const material = new THREE.MeshBasicMaterial({ map: texture });
 
     const sphere = new THREE.Mesh(new THREE.SphereGeometry(0.5, 32, 32), material);
-    sphere.position.set(0, -3, 6);
+    sphere.position.set(0, 0, 1.7);
     this.scene.add(sphere);
 
     const cube = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), material);
-    cube.position.set(0, -3, 6);
+    cube.position.set(0, 0, -50);
     this.scene.add(cube);
 
     const pyramid = new THREE.Mesh(new THREE.TetrahedronGeometry(0.8), material);
-    pyramid.position.set(0, -3, 6);
+    pyramid.position.set(0, 0, -150);
     this.scene.add(pyramid);
 
     const cone = new THREE.Mesh(new THREE.ConeGeometry(0.6, 1.5, 32), material);
-    cone.position.set(0, -3, 6);
+    cone.position.set(0, 0, -150);
     this.scene.add(cone);
 
     this.primitives = [sphere, cube, pyramid, cone];
+
+    this.primitives.slice(2).forEach((model) => {
+      this.toggleModelVisibility(model, false);
+    });
   }
 
   animateModels() {
+    if (!this.isAnimationFinished) return;
+
+    this.isAnimationFinished = false;
+
     const timeline = gsap.timeline();
-    const model = this.primitives[this.activeModelIndex];
+
+    this.activeModelIndex = (this.activeModelIndex + 1) % this.primitives.length;
+    const previousModelIndex = (this.activeModelIndex - 1 + this.primitives.length) % this.primitives.length;
+
+    const currentModelIndex = this.activeModelIndex;
+    const nextModelIndex = (this.activeModelIndex + 1 + this.primitives.length) % this.primitives.length;
+
+    const currentModel = this.primitives[currentModelIndex];
+    const previousModel = this.primitives[previousModelIndex];
+    const nextModel = this.primitives[nextModelIndex];
 
     timeline
-      .to(model.position, {
-        y: 0,
-        z: 1.7,
-        delay: 0.5,
-        duration: 3,
-        onStart: () => this.toggleModelVisibility(model, true),
+      .to(this.params, {
+        speed: 29,
+        ease: 'power2.out',
       })
-      .to(model.position, {
-        y: -3,
-        z: 6,
-        duration: 3,
-        delay: 1,
-        onComplete: () => {
-          this.toggleModelVisibility(model, false);
-          this.activeModelIndex = (this.activeModelIndex + 1) % this.primitives.length;
-          this.animateModels();
+      .to(
+        previousModel.position,
+        {
+          z: 6,
+          y: -3,
+          onComplete: () => {
+            this.toggleModelVisibility(previousModel, false);
+          },
         },
-      });
+        '<',
+      )
+      .to(
+        currentModel.position,
+        {
+          z: 1.7,
+          y: 0,
+          onStart: () => {
+            this.toggleModelVisibility(nextModel, true);
+          },
+          onComplete: () => {
+            previousModel.position.z = -150;
+            this.toggleModelVisibility(previousModel, false);
+            this.isAnimationFinished = true;
+          },
+        },
+        '<',
+      )
+      .to(
+        nextModel.position,
+        {
+          z: -50,
+          y: 0,
+        },
+        '<',
+      )
+      .to(this.params, { speed: 1 });
   }
 
   toggleModelVisibility(model: THREE.Mesh, show: boolean) {
@@ -408,6 +441,12 @@ export default class extends Controller {
     this.camera.aspect = this.containerTarget.clientWidth / this.containerTarget.clientHeight;
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(this.containerTarget.clientWidth, this.containerTarget.clientHeight);
+  };
+
+  wheelHandler = (event: WheelEvent) => {
+    if (event.deltaY > 0) {
+      this.animateModels();
+    }
   };
 
   declare readonly hasContainerTarget: boolean;
