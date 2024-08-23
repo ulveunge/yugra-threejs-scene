@@ -469,7 +469,9 @@ export default class extends Controller {
   };
 
   wheelHandler = (event: WheelEvent) => {
-    if (event.deltaY > 0) {
+    const threshold = 20;
+
+    if (event.deltaY > threshold) {
       this.animateModels();
     }
   };
