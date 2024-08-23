@@ -33,13 +33,9 @@ export default class extends Controller {
   stats!: Stats;
 
   params = {
-    // general scene params
     speed: 1,
-
-    // plane params
     meshEmissive: 0xffffff,
-    lineWidth: 0.04,
-    // lineColor: 0x1a1a1a,
+    lineWidth: 0.02,
     lineColor: 0x999999,
   };
 
@@ -48,15 +44,18 @@ export default class extends Controller {
 
   numOfMeshSets = 6;
 
+  mouseX = 0;
+  mouseY = 0;
+
   initialize() {
     if (this.hasContainerTarget && this.hasVeilTarget) {
       this.scene = new THREE.Scene();
       this.renderer = this.createRenderer({ antialias: true, logarithmicDepthBuffer: true, alpha: true });
       this.camera = this.createCamera(70, 1, 120, { x: 0, y: 0, z: 2.4 });
       this.textureLoader = new THREE.TextureLoader();
-      this.controls = this.createOrbitControls();
       window.addEventListener('resize', this.resize);
       this.containerTarget.addEventListener('wheel', this.wheelHandler);
+      this.containerTarget.addEventListener('mousemove', this.mouseHandler);
       this.run();
     }
   }
@@ -216,6 +215,7 @@ export default class extends Controller {
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setClearColor(0x000000, 0);
+    renderer.domElement.classList.add('pointer-events-none');
 
     if (configureRenderer) configureRenderer(renderer);
 
@@ -257,16 +257,20 @@ export default class extends Controller {
   addBackground() {
     const textureLoader = new THREE.TextureLoader();
     const backgroundTexture = textureLoader.load(Star);
-    const backgroundGeometry = new THREE.PlaneGeometry(2, 2);
+
+    const backgroundGeometry = new THREE.PlaneGeometry(60, 60); // Adjust size as needed
     const backgroundMaterial = new THREE.MeshBasicMaterial({
       map: backgroundTexture,
       transparent: true,
     });
+
     const backgroundMesh = new THREE.Mesh(backgroundGeometry, backgroundMaterial);
-    backgroundMesh.position.set(0, 15, -80);
-    const scaleFactor = 30;
-    backgroundMesh.scale.set(scaleFactor, scaleFactor, 1);
-    this.scene.add(backgroundMesh);
+
+    backgroundMesh.position.set(0, 10, -80);
+
+    this.camera.add(backgroundMesh);
+
+    this.scene.add(this.camera);
   }
 
   createGuiControls() {
@@ -306,11 +310,11 @@ export default class extends Controller {
     const material = new THREE.MeshBasicMaterial({ map: texture });
 
     const sphere = new THREE.Mesh(new THREE.SphereGeometry(0.5, 32, 32), material);
-    sphere.position.set(0, 0, 1.7);
+    sphere.position.set(0, 0, -1.7);
     this.scene.add(sphere);
 
     const cube = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), material);
-    cube.position.set(0, 0, -50);
+    cube.position.set(0, 0, -150);
     this.scene.add(cube);
 
     const pyramid = new THREE.Mesh(new THREE.TetrahedronGeometry(0.8), material);
@@ -348,6 +352,7 @@ export default class extends Controller {
     timeline
       .to(this.params, {
         speed: 29,
+        duration: 0.5,
         ease: 'power2.out',
       })
       .to(
@@ -355,6 +360,8 @@ export default class extends Controller {
         {
           z: 6,
           y: -3,
+          delay: 0.1,
+          duration: 1,
           onComplete: () => {
             this.toggleModelVisibility(previousModel, false);
           },
@@ -364,8 +371,9 @@ export default class extends Controller {
       .to(
         currentModel.position,
         {
-          z: 1.7,
+          z: -1.7,
           y: 0,
+          duration: 1,
           onStart: () => {
             this.toggleModelVisibility(nextModel, true);
           },
@@ -380,12 +388,13 @@ export default class extends Controller {
       .to(
         nextModel.position,
         {
-          z: -50,
+          duration: 1,
+          z: -150,
           y: 0,
         },
         '<',
       )
-      .to(this.params, { speed: 1 });
+      .to(this.params, { speed: 1, delay: 0.5, duration: 0.5, ease: 'power2.in' }, '<');
   }
 
   toggleModelVisibility(model: THREE.Mesh, show: boolean) {
@@ -394,13 +403,27 @@ export default class extends Controller {
 
   createStats() {
     this.stats = new Stats();
-    this.stats.showPanel(0); // Panel 0 = fps
+    this.stats.showPanel(0);
     document.body.appendChild(this.stats.dom);
   }
 
+  rotateCamera() {
+    const factorX = this.mouseX / this.containerTarget.clientWidth - 0.5;
+    const factorY = this.mouseY / this.containerTarget.clientHeight - 0.5;
+
+    const maxRotationAngle = Math.PI / 10;
+
+    gsap.to(this.camera.rotation, {
+      x: factorY * maxRotationAngle,
+      y: factorX * maxRotationAngle,
+      ease: 'bounce.inOut',
+      duration: 1,
+    });
+  }
+
   updateScene(interval: number) {
-    this.controls.update();
     this.stats.update();
+    this.rotateCamera();
 
     for (let i = 0; i < this.numOfMeshSets; i++) {
       this.meshGroup[i].position.z += interval * this.params.speed;
@@ -447,6 +470,11 @@ export default class extends Controller {
     if (event.deltaY > 0) {
       this.animateModels();
     }
+  };
+
+  mouseHandler = (event: MouseEvent) => {
+    this.mouseX = event.clientX;
+    this.mouseY = event.clientY;
   };
 
   declare readonly hasContainerTarget: boolean;
