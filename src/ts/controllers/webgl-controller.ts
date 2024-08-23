@@ -408,7 +408,7 @@ export default class extends Controller {
   }
 
   rotateCamera() {
-    if (!this.mouseX || !this.mouseY) return;
+    if (this.mouseX === null || this.mouseY === null) return;
 
     const factorX = this.mouseX / this.containerTarget.clientWidth - 0.5;
     const factorY = this.mouseY / this.containerTarget.clientHeight - 0.5;
