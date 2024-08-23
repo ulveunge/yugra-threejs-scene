@@ -44,8 +44,8 @@ export default class extends Controller {
 
   numOfMeshSets = 6;
 
-  mouseX = 0;
-  mouseY = 0;
+  mouseX: null | number = null;
+  mouseY: null | number = null;
 
   initialize() {
     if (this.hasContainerTarget && this.hasVeilTarget) {
@@ -408,6 +408,8 @@ export default class extends Controller {
   }
 
   rotateCamera() {
+    if (!this.mouseX || !this.mouseY) return;
+
     const factorX = this.mouseX / this.containerTarget.clientWidth - 0.5;
     const factorY = this.mouseY / this.containerTarget.clientHeight - 0.5;
 
